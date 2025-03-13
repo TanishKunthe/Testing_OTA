@@ -1,4 +1,4 @@
-This Repo will be for Testing for the 
+This Repo will be for Testing of the 
 Auto Update the Firmware over OTA from GitHub 
 
 Explaiation : 
