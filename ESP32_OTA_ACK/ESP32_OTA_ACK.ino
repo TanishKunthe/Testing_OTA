@@ -5,14 +5,14 @@
 
 #define fota_ssid       "E-ARTKEY_4G"
 #define fota_password   "Connect@Eartkey"
-#define OTA_URL         "https://raw.githubusercontent.com/TanishKunthe/Testing_OTA/main/firmware.bin"
+#define OTA_URL         "https://raw.githubusercontent.com/TanishKunthe/Testing_OTA/main/firmwareLED.bin"
 #define VERSION_URL     "https://raw.githubusercontent.com/TanishKunthe/Testing_OTA/main/version.txt"  // Version file URL
 
 #define CURRENT_VERSION "1.0"  // Set the current firmware version
 #define GOOGLE_SCRIPT_URL "https://script.google.com/macros/s/AKfycbzja2NSUw-Cgqm7q6Woc6JIYcoK9meJGC6YQArANVMOBjQ25IbUGMsi5wrMaYbdli6Myw/exec"
 
 void setup() {
-  delay(2000);
+  delay(10000);
   Serial.begin(115200);
   Serial.println("Testing the FoTa Github Cloning with ACK");
 
