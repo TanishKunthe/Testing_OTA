@@ -1,18 +1,20 @@
 #include <WiFi.h>
 #include <Update.h>
 #include <HTTPClient.h>
+#include <time.h>  // Include time library
 
 #define fota_ssid       "E-ARTKEY_4G"
 #define fota_password   "Connect@Eartkey"
-#define OTA_URL         "https://raw.githubusercontent.com/TanishKunthe/Testing_OTA/main/ESP32_OTA/ESP32_OTA.bin"
+#define OTA_URL         "https://raw.githubusercontent.com/TanishKunthe/Testing_OTA/main/firmware.bin"
 #define VERSION_URL     "https://raw.githubusercontent.com/TanishKunthe/Testing_OTA/main/version.txt"  // Version file URL
 
 #define CURRENT_VERSION "1.0"  // Set the current firmware version
+#define GOOGLE_SCRIPT_URL "https://script.google.com/macros/s/AKfycbzja2NSUw-Cgqm7q6Woc6JIYcoK9meJGC6YQArANVMOBjQ25IbUGMsi5wrMaYbdli6Myw/exec"
 
 void setup() {
   delay(2000);
   Serial.begin(115200);
-  Serial.println("Testing the FoTa Github Cloning");
+  Serial.println("Testing the FoTa Github Cloning with ACK");
 
   WiFi.begin(fota_ssid, fota_password);
   Serial.println("Connecting to WiFi...");
@@ -28,17 +30,19 @@ void setup() {
 
   // Fetch version from server and compare
   String newVersion = fetchVersion();
+
   if (newVersion != "" && newVersion > CURRENT_VERSION) {
     Serial.println("New Version Available: " + newVersion);
     if (performOTA()) {
       Serial.println("OTA update successful, restarting...");
-      // Write Device ID to version.txt at Github
-      
+      logUpdateToGoogleSheet(newVersion);  // Log the update to Google Sheets
       esp_restart();
-    } else {
+    }
+    else {
       Serial.println("OTA update failed.");
     }
-  } else {
+  }
+  else {
     Serial.println("No update required. Already running latest version: " + String(CURRENT_VERSION));
   }
 }
@@ -103,6 +107,30 @@ bool performOTA() {
   }
 
   return false;  // OTA failed
+}
+
+void logUpdateToGoogleSheet(String version) {
+  HTTPClient http;
+
+  // Get current date and time
+  time_t now = time(nullptr);
+  struct tm* timeinfo = localtime(&now);
+  String date = String(timeinfo->tm_year + 1900) + "-" + String(timeinfo->tm_mon + 1) + "-" + String(timeinfo->tm_mday);
+  String time = String(timeinfo->tm_hour) + ":" + String(timeinfo->tm_min) + ":" + String(timeinfo->tm_sec);
+
+  // Prepare the POST request
+  http.begin(GOOGLE_SCRIPT_URL);
+  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+
+  String jsonPayload = "version=" + version + "&date=" + date + "&time=" + time;
+
+  int httpResponseCode = http.POST(jsonPayload);
+  if (httpResponseCode > 0) {
+    Serial.printf("Log sent successfully: %s\n", httpResponseCode);
+  } else {
+    Serial.printf("Error sending log: %s\n", http.errorToString(httpResponseCode).c_str());
+  }
+  http.end();
 }
 
 void loop() {
