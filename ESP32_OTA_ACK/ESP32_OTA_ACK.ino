@@ -3,12 +3,14 @@
 #include <HTTPClient.h>
 #include <time.h>  // Include time library
 
+#define deviceID        "D0325001"
+
 #define fota_ssid       "E-ARTKEY_4G"
 #define fota_password   "Connect@Eartkey"
 #define OTA_URL         "https://raw.githubusercontent.com/TanishKunthe/Testing_OTA/main/firmwareLED.bin"
 #define VERSION_URL     "https://raw.githubusercontent.com/TanishKunthe/Testing_OTA/main/version.txt"  // Version file URL
 
-#define CURRENT_VERSION "1.0"  // Set the current firmware version
+#define CURRENT_VERSION   "1.0"  // Set the current firmware version
 #define GOOGLE_SCRIPT_URL "https://script.google.com/macros/s/AKfycbzja2NSUw-Cgqm7q6Woc6JIYcoK9meJGC6YQArANVMOBjQ25IbUGMsi5wrMaYbdli6Myw/exec"
 
 void setup() {
@@ -36,6 +38,7 @@ void setup() {
     if (performOTA()) {
       Serial.println("OTA update successful, restarting...");
       logUpdateToGoogleSheet(newVersion);  // Log the update to Google Sheets
+      delay(5000);
       esp_restart();
     }
     else {
@@ -112,17 +115,11 @@ bool performOTA() {
 void logUpdateToGoogleSheet(String version) {
   HTTPClient http;
 
-  // Get current date and time
-  time_t now = time(nullptr);
-  struct tm* timeinfo = localtime(&now);
-  String date = String(timeinfo->tm_year + 1900) + "-" + String(timeinfo->tm_mon + 1) + "-" + String(timeinfo->tm_mday);
-  String time = String(timeinfo->tm_hour) + ":" + String(timeinfo->tm_min) + ":" + String(timeinfo->tm_sec);
-
   // Prepare the POST request
   http.begin(GOOGLE_SCRIPT_URL);
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
 
-  String jsonPayload = "version=" + version + "&date=" + date + "&time=" + time;
+  String jsonPayload = "deviceID=" + String(deviceID) + "&version=" + version;
 
   int httpResponseCode = http.POST(jsonPayload);
   if (httpResponseCode > 0) {
