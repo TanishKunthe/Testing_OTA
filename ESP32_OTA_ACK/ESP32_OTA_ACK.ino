@@ -41,13 +41,13 @@ void setup() {
 
   if (newVersion != "" && newVersion > CURRENT_VERSION) {
     Serial.println("New Version Available: " + newVersion);
-    
+
     preferences.begin("version_control", false);
     preferences.putString("CURRENT_VERSION", newVersion);
     preferences.end();
 
     logUpdateToGoogleSheet(newVersion);  // Log the update to Google Sheets
-    
+
     if (performOTA()) {
       Serial.println("OTA update successful, restarting...");
       delay(5000);
@@ -127,19 +127,26 @@ bool performOTA() {
 void logUpdateToGoogleSheet(String version) {
   HTTPClient http;
 
-  // Prepare the POST request
-  http.begin(GOOGLE_SCRIPT_URL);
-  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+  String jsonPayload = String(GOOGLE_SCRIPT_URL) + "deviceID=" + String(deviceID) + "&version=" + version;
 
-  String jsonPayload = "deviceID=" + String(deviceID) + "&version=" + version;
+  // Prepare the POST request
+  http.begin(jsonPayload);
+  http.addHeader("Content-Type", "text/plain");
+  http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
 
   int httpResponseCode = http.POST(jsonPayload);
+
+  Serial.print("httpcode : ");
+  Serial.println(httpResponseCode);
+
   if (httpResponseCode > 0) {
-    Serial.printf("Log sent successfully: %s\n", httpResponseCode);
-  } else {
-    Serial.printf("Error sending log: %s\n", http.errorToString(httpResponseCode).c_str());
+    Serial.println("Log sent successfully");
+  }
+  else {
+    Serial.println("Error sending log ");
   }
   http.end();
+  delay(500);
 }
 
 void loop() {
