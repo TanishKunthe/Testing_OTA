@@ -1,22 +1,28 @@
 #include <WiFi.h>
 #include <Update.h>
 #include <HTTPClient.h>
-#include <time.h>  // Include time library
+#include <Preferences.h>
 
 #define deviceID        "D0325001"
-
 #define fota_ssid       "E-ARTKEY_4G"
 #define fota_password   "Connect@Eartkey"
 #define OTA_URL         "https://raw.githubusercontent.com/TanishKunthe/Testing_OTA/main/firmwareLED.bin"
-#define VERSION_URL     "https://raw.githubusercontent.com/TanishKunthe/Testing_OTA/main/version.txt"  // Version file URL
+#define VERSION_URL     "https://raw.githubusercontent.com/TanishKunthe/Testing_OTA/main/version.txt"     // Version file URL
 
-#define CURRENT_VERSION   "1.0"  // Set the current firmware version
+String CURRENT_VERSION;  // Set the current firmware version
+
 #define GOOGLE_SCRIPT_URL "https://script.google.com/macros/s/AKfycbzja2NSUw-Cgqm7q6Woc6JIYcoK9meJGC6YQArANVMOBjQ25IbUGMsi5wrMaYbdli6Myw/exec"
+
+Preferences preferences;
 
 void setup() {
   delay(10000);
   Serial.begin(115200);
   Serial.println("Testing the FoTa Github Cloning with ACK");
+
+  preferences.begin("version_control", true);
+  CURRENT_VERSION = preferences.getString("CURRENT_VERSION", "");
+  preferences.end();
 
   WiFi.begin(fota_ssid, fota_password);
   Serial.println("Connecting to WiFi...");
@@ -35,9 +41,15 @@ void setup() {
 
   if (newVersion != "" && newVersion > CURRENT_VERSION) {
     Serial.println("New Version Available: " + newVersion);
+    
+    preferences.begin("version_control", false);
+    preferences.putString("CURRENT_VERSION", newVersion);
+    preferences.end();
+
+    logUpdateToGoogleSheet(newVersion);  // Log the update to Google Sheets
+    
     if (performOTA()) {
       Serial.println("OTA update successful, restarting...");
-      logUpdateToGoogleSheet(newVersion);  // Log the update to Google Sheets
       delay(5000);
       esp_restart();
     }
