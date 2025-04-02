@@ -1,5 +1,5 @@
 # Testing OTA with ESP32
-This Repo consists of the Testing Arduino framework code for feature of the ESP32
+This Repo consists of the Testing Arduino framework code to Test the ESP32 OTA feature,
 where the firmware will be Auto Updated to the Hardware by fetching .bin file from the GitHUb Account
 
 # Explaination : 
